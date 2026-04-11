@@ -13,6 +13,7 @@ export interface QueueJobPayload {
 export class JobQueueGateway {
   readonly queue: Queue<QueueJobPayload>;
   readonly deadLetterQueue: Queue<QueueJobPayload>;
+  private readonly deadLetterSuffix = '--dead-letter';
 
   constructor() {
     this.queue = new Queue<QueueJobPayload>(env.queueName, {
@@ -71,7 +72,7 @@ export class JobQueueGateway {
         },
       },
       {
-        jobId: `${job.id}:dead-letter`,
+        jobId: `${job.id}${this.deadLetterSuffix}`,
         removeOnComplete: false,
         removeOnFail: false,
       },
@@ -81,7 +82,7 @@ export class JobQueueGateway {
   async removeJob(jobId: string) {
     const [activeJob, deadLetterJob] = await Promise.all([
       this.queue.getJob(jobId),
-      this.deadLetterQueue.getJob(`${jobId}:dead-letter`),
+      this.deadLetterQueue.getJob(`${jobId}${this.deadLetterSuffix}`),
     ]);
 
     if (activeJob) {
