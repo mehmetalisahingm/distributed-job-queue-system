@@ -1,0 +1,40 @@
+{
+  "name": "@distributed-job-queue/backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:api": "tsx watch src/api/server.ts",
+    "dev:worker": "tsx watch src/worker/main.ts",
+    "start:api": "tsx src/api/server.ts",
+    "start:worker": "tsx src/worker/main.ts",
+    "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "seed": "tsx src/scripts/seed-demo-jobs.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "bullmq": "^5.73.4",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "ioredis": "^5.10.1",
+    "pino": "^10.3.1",
+    "prom-client": "^15.1.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/supertest": "^6.0.3",
+    "prisma": "^6.19.0",
+    "supertest": "^7.2.2",
+    "tsx": "^4.21.0",
+    "vitest": "^4.1.4"
+  }
+}
