@@ -32,7 +32,7 @@ That is the problem this repository is built around.
 
 ![Demo](./docs/videos/demo.gif)
 
-- Video placeholder: [`docs/videos/demo.mp4`](./docs/videos/demo.mp4)
+- Demo video: [`docs/videos/demo.mp4`](./docs/videos/demo.mp4)
 
 ### Suggested Walkthrough
 
