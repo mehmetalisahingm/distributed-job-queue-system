@@ -7,35 +7,42 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Prisma-4169E1?logo=postgresql&logoColor=white)
 ![React](https://img.shields.io/badge/React-Dashboard-61DAFB?logo=react&logoColor=0A0A0A)
 
-A production-style full-stack portfolio project that models how a real backend platform accepts background work, stores durable job state, distributes jobs through a Redis-backed queue, processes them asynchronously with workers, and exposes operational visibility through an API and dashboard.
+A production-style queue platform that models how backend systems accept long-running work, persist durable state, distribute jobs asynchronously, and expose operator visibility through an internal dashboard.
 
-This project is intentionally manageable for local development, but it is structured the way a real system would grow in production: decoupled ingestion, durable persistence, independently scalable workers, retry and dead-letter handling, metrics, health checks, and an operator-facing dashboard.
+## Why I Built This
 
-## Portfolio Snapshot
+Many backend portfolios stay inside CRUD. Real systems do not.
 
-- Queue-based distributed workflow with clear API, worker, database, and broker boundaries
-- Real retry behavior with exponential backoff and explicit dead-letter handling
-- PostgreSQL used as the durable source of truth for job history and logs
-- Redis + BullMQ used for asynchronous delivery and execution flow
-- Modern React dashboard designed like an internal operations console
-- Docker Compose setup for fast local evaluation and demoing
+I built this project to demonstrate a more practical platform problem:
 
-## Why This Project Matters
+How do you accept work without blocking requests, retry failures safely, preserve operational history, and give humans a clear control surface when things go wrong?
 
-Most beginner backend projects stop at CRUD. This one focuses on a more realistic engineering problem:
-
-How do you accept long-running or failure-prone work without blocking HTTP requests, while still keeping the system observable, debuggable, and scalable?
-
-That is the core problem this repository solves.
+That is the problem this repository is built around.
 
 ## What This Project Demonstrates
 
-- Distributed systems basics through queue-driven asynchronous processing
-- Separation of concerns between ingestion, execution, persistence, and presentation
-- Practical reliability patterns such as retries, exponential backoff, and dead-letter queues
-- Production-minded backend design with health checks, metrics, logging, and typed contracts
-- Full-stack system design where backend behavior is surfaced clearly in a usable UI
-- A codebase that is strong enough for technical discussion in interviews
+- queue-based asynchronous processing
+- a clean split between API, worker, broker, storage, and UI
+- retries with exponential backoff
+- dead-letter handling as an explicit system state
+- durable job history and structured operational logs
+- a dashboard designed for operators, not just for screenshots
+
+## Demo
+
+### Suggested Walkthrough
+
+1. Start the stack with Docker Compose.
+2. Open the dashboard and show seeded jobs in different states.
+3. Create a new job from the API.
+4. Watch workers process it asynchronously.
+5. Open a failed or dead-lettered job and trigger a manual retry.
+6. Show health and metrics endpoints to explain observability.
+
+### Demo Assets
+
+- Screenshot placeholders live in [`docs/screenshots`](./docs/screenshots/README.md)
+- Video capture notes live in [`docs/videos`](./docs/videos/README.md)
 
 ## Architecture
 
@@ -73,14 +80,14 @@ flowchart LR
 5. The worker writes status transitions, results, and logs back to PostgreSQL.
 6. If processing fails, BullMQ retries with exponential backoff.
 7. If retries are exhausted, the job is marked `dead_lettered` and copied into a dedicated dead-letter queue.
-8. The dashboard and API read durable state from PostgreSQL so the system remains queryable after execution.
+8. The dashboard reads durable state from PostgreSQL so operators can inspect the system after execution.
 
 ## Recruiter-Friendly Highlights
 
-- This is not a toy request-response app; it models asynchronous system behavior.
-- It shows that I understand the difference between queue state and durable application state.
-- It demonstrates operational thinking: failure modes are visible, not hidden.
-- It is built to be easy to run locally without giving up architectural clarity.
+- This is not a request-response CRUD app.
+- It shows the difference between queue state and durable application state.
+- It surfaces failures as first-class behavior instead of hiding them.
+- It demonstrates backend design, operational thinking, and a product-minded UI in one repo.
 
 ## Tech Stack
 
@@ -88,7 +95,7 @@ flowchart LR
 
 - Node.js
 - TypeScript
-- Express.js
+- Express
 - PostgreSQL
 - Prisma ORM
 - Redis
@@ -119,7 +126,7 @@ flowchart LR
 - `image_processing_simulation`
 - `report_generation`
 
-These are simulated processors so the project runs locally without third-party providers, but the processor layer is structured so real integrations can be added later.
+These are simulated processors so the platform runs locally without third-party providers, but the processor boundary is deliberately structured so real integrations can replace them later.
 
 ## Job Lifecycle
 
@@ -133,40 +140,59 @@ Supported statuses:
 - `retrying`
 - `dead_lettered`
 
+## Scaling Decisions
+
+### 1. API and worker are separate runtimes
+
+The API accepts work and returns quickly. Workers handle execution. That separation keeps HTTP latency independent from job duration and gives the system an obvious scaling path.
+
+### 2. Redis for queue delivery, PostgreSQL for durable truth
+
+Redis is excellent at fast queue coordination. PostgreSQL is better for durable records, queryability, auditability, and reporting. The project intentionally uses both because they solve different problems.
+
+### 3. BullMQ instead of hand-rolled retry orchestration
+
+BullMQ gives retries, concurrency controls, backoff, and worker lifecycle primitives with far less custom failure logic. For this scope, that trade is more pragmatic than building queue orchestration from scratch.
+
+### 4. Dashboard as an operator interface
+
+The dashboard is not decorative. It is there to expose the system states that matter:
+
+- processing,
+- retrying,
+- failed,
+- dead-lettered,
+- retried,
+- deleted.
+
+That turns architecture into something you can actually inspect and explain.
+
+## Tradeoffs
+
+### Chosen now: one queue platform, not a fleet of services
+
+This system is intentionally smaller than a true multi-tenant production platform. It focuses on the core asynchronous workflow before adding auth domains, tenant boundaries, external schedulers, or event buses.
+
+### Chosen now: polling-style dashboard refresh instead of live push
+
+The project leaves room for SSE or WebSocket updates later. For this version, simpler dashboard refresh behavior keeps the platform easier to run and explain locally.
+
+### Chosen now: simulated processors instead of vendor integrations
+
+Real email, media, and reporting vendors would add realism, but they would also shift the repo toward provider setup instead of system design. Simulated processors keep the engineering lesson focused on queue architecture.
+
 ## Failure Handling Strategy
 
-- Each job is created with a configurable max attempt count.
+- Each job has a configurable max attempt count.
 - BullMQ applies exponential backoff between retries.
-- On a failed attempt, the worker persists `retrying` plus the next retry timestamp.
-- When the retry budget is exhausted, the worker records the error and marks the job `dead_lettered`.
+- On a failed attempt, the worker persists `retrying` and the next retry timestamp.
+- When the retry budget is exhausted, the job is marked `dead_lettered`.
 - Dead-lettered jobs remain visible in the API and dashboard and can be retried manually.
-- Structured logs are stored for job receipt, queueing, start, retry, completion, failure, and dead-letter events.
-
-## Scalability Considerations
-
-- The API and worker are separate runtimes, so they can scale independently.
-- Workers support configurable concurrency with `WORKER_CONCURRENCY`.
-- Multiple worker containers can be added with `docker compose --scale worker=N`.
-- Redis handles fast queue operations while PostgreSQL stores durable, queryable state.
-- Job processors are isolated by type, making it straightforward to split workload classes into separate queues later.
-- Health and metrics endpoints provide a base for alerting, autoscaling, and external observability tooling.
-
-## Dashboard
-
-The dashboard is intentionally designed like an internal ops console, not a generic CRUD table.
-
-It includes:
-
-- live job list with status visibility
-- status and type filters
-- operational summary cards
-- job detail drawer with payload, result, timestamps, and logs
-- manual retry and delete actions
-- loading and failure states suitable for demos
+- Structured logs are stored for receipt, queueing, start, retry, completion, failure, and dead-letter events.
 
 ## Realistic Seed Data
 
-The seed script creates operationally meaningful scenarios instead of filler data:
+The seed script creates operationally meaningful scenarios instead of filler records:
 
 - high-priority onboarding email
 - delayed marketing digest email
@@ -216,41 +242,11 @@ POSTGRES_HOST_PORT=5433
 npm run seed
 ```
 
-### 4. Scale workers
-
-```bash
-docker compose up --build --scale worker=3
-```
-
-## Local Development Without Docker
-
-1. Start PostgreSQL and Redis locally.
-2. Copy env files:
-
-```powershell
-Copy-Item .env.example .env
-Copy-Item services/backend/.env.example services/backend/.env
-Copy-Item services/web/.env.example services/web/.env
-```
-
-3. Generate Prisma client and apply migrations:
-
-```bash
-npm run db:generate
-npm run db:migrate
-```
-
-4. Start each service in separate terminals:
+### 4. Start services separately if needed
 
 ```bash
 npm run dev:api
-```
-
-```bash
 npm run dev:worker
-```
-
-```bash
 npm run dev:web
 ```
 
@@ -285,18 +281,6 @@ curl -X POST http://localhost:4000/api/jobs \
   }'
 ```
 
-Example response:
-
-```json
-{
-  "data": {
-    "id": "6e2467db-2d95-4a54-b5af-2a6c8dff2b08",
-    "status": "queued",
-    "createdAt": "2026-04-11T18:10:32.401Z"
-  }
-}
-```
-
 ## Project Structure
 
 ```text
@@ -318,7 +302,6 @@ Example response:
 |   `-- web
 |       `-- src
 `-- docs
-    `-- screenshots
 ```
 
 ## Development Checks
@@ -330,33 +313,8 @@ npm test
 npm run build --workspace @distributed-job-queue/web
 ```
 
-## How To Explain This In An Interview
+## Interview Narrative
 
-Use this short version:
+Short version:
 
-"This project is a distributed background job system. The API accepts work and returns immediately, Redis and BullMQ handle asynchronous delivery, workers process jobs independently, PostgreSQL stores durable state and logs, and the dashboard exposes retries, failures, and dead-lettered jobs. I built it to show queue-based architecture, fault tolerance, and production-style backend design."
-
-Technical talking points:
-
-- why long-running work should be moved out of the request-response cycle
-- why Redis is used for queue delivery while PostgreSQL stores durable state
-- how retries and dead-letter behavior are modeled explicitly
-- how API and worker scaling differ
-- how simulated processors could be replaced with real integrations
-
-## Future Improvements
-
-- authentication and tenant isolation
-- scheduled and recurring jobs
-- SSE or WebSocket live updates
-- OpenTelemetry tracing
-- worker-specific metrics and alerting
-- queue partitioning by workload type
-- object storage integration for large artifacts
-- archival and retention policies
-
-## Screenshot Placeholders
-
-- [`docs/screenshots/dashboard-overview.png`](./docs/screenshots/dashboard-overview.png)
-- [`docs/screenshots/job-detail-drawer.png`](./docs/screenshots/job-detail-drawer.png)
-- [`docs/screenshots/compose-services.png`](./docs/screenshots/compose-services.png)
+> I built this to show how asynchronous backend systems really behave. The API accepts work without blocking, Redis and BullMQ coordinate execution, workers process jobs independently, PostgreSQL stores durable state and logs, and the dashboard makes retries and dead-letter behavior visible to operators.
