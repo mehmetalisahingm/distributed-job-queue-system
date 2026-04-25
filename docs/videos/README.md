@@ -1,16 +1,14 @@
-# Video Capture Notes
+# Demo Recording Guide
 
-Add a short walkthrough GIF or MP4 here for the repository README and social sharing.
+## Scenario
 
-Suggested asset names:
+1. Login
+2. Navigate main feature
+3. Trigger core functionality
+4. Show real-time or async behavior
+5. Show result
 
-- `job-queue-demo.gif`
-- `job-queue-demo.mp4`
+## Output
 
-Suggested capture flow:
-
-1. Open the dashboard overview.
-2. Filter jobs by status.
-3. Open a failed or dead-lettered job.
-4. Trigger a manual retry.
-5. Show `/api/health` and `/api/metrics`.
+- `demo.gif`
+- `demo.mp4`

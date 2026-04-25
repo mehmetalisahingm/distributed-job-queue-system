@@ -1,7 +1,10 @@
-# Screenshot Placeholders
+# Screenshot Guide
 
-Capture and place screenshots in this folder to complete the portfolio presentation:
+Add polished screenshots here for the README and portfolio site.
 
+Suggested files:
+
+- `screen1.png`
 - `dashboard-overview.png`
 - `job-detail-drawer.png`
 - `compose-services.png`

@@ -19,7 +19,7 @@ How do you accept work without blocking requests, retry failures safely, preserv
 
 That is the problem this repository is built around.
 
-## What This Project Demonstrates
+## What It Demonstrates
 
 - queue-based asynchronous processing
 - a clean split between API, worker, broker, storage, and UI
@@ -29,6 +29,10 @@ That is the problem this repository is built around.
 - a dashboard designed for operators, not just for screenshots
 
 ## Demo
+
+![Demo](./docs/videos/demo.gif)
+
+- Video placeholder: [`docs/videos/demo.mp4`](./docs/videos/demo.mp4)
 
 ### Suggested Walkthrough
 
@@ -166,6 +170,12 @@ The dashboard is not decorative. It is there to expose the system states that ma
 - deleted.
 
 That turns architecture into something you can actually inspect and explain.
+
+## Screenshots
+
+![Primary Screenshot Placeholder](./docs/screenshots/screen1.png)
+
+Screenshot guide: [`docs/screenshots/README.md`](./docs/screenshots/README.md)
 
 ## Tradeoffs
 
